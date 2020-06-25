@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# PROVIDE: transvpnmon
+# REQUIRE: transmission
+# REQUIRE: openvpn
+
+. /etc/rc.subr
+
+name=transvpnmon
+start_cmd="${name}_start"
+
+rcvar=`set_rcvar`
+
+command="/usr/sbin/transvpnmon.py"
+command_interpreter=/usr/local/bin/python2.7
+
+pidfile="/var/run/${name}.pid"
+
+start_cmd="/usr/sbin/daemon -p $pidfile $command"
+
+load_rc_config $name
+
+run_rc_command "$1"
