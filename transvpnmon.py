@@ -9,7 +9,7 @@ DEBUG = True
 
 def get_tun_ip():
     pipe = Popen("ifconfig tun0", shell=True, stdout=PIPE, stderr=PIPE).stdout
-    x = pipe.read()
+    x = pipe.read().encode("utf-8")
     if len(x) == 0:
         return None
     return x.split("inet ")[1].split(" ")[0]
