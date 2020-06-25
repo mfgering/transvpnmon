@@ -8,11 +8,11 @@ ptvsd.enable_attach(address = ('0.0.0.0', 8567))
 #ptvsd.wait_for_attach()
 ptvsd.wait_for_attach()
  
-ptvsd.break_into_debugger()
+#ptvsd.break_into_debugger()
  
-cwd = os.getcwd()
+#cwd = os.getcwd()
  
-print("Hello world you are here %s" % cwd )
-print("On machine %s" % socket.gethostname())
+#print("Hello world you are here %s" % cwd )
+#print("On machine %s" % socket.gethostname())
 
 transvpnmon.run()
