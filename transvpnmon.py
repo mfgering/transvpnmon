@@ -21,6 +21,15 @@ def get_tun_ip():
         return None
     return x.split("inet ")[1].split(" ")[0]
 
+def get_tun_ifaces():
+    global args
+
+    ifaces = []
+    pipe = Popen("ifconfig -g tun", shell=True, stdout=PIPE, stderr=PIPE).stdout
+    x = pipe.read().decode("utf-8")
+    #TODO: FIX THIS
+    return ifaces
+
 def status_transmission():
     """Return True if running, False if not."""
     global args
@@ -163,4 +172,5 @@ def parse_options():
 if __name__ == "__main__":
     global args
     args = parse_options()
+    ifaces = get_tun_ifaces()
     run()
