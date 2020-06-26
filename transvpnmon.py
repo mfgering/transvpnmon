@@ -26,7 +26,13 @@ def get_tun_ifaces():
 
     pipe = Popen("ifconfig -g tun", shell=True, stdout=PIPE, stderr=PIPE).stdout
     ifaces = pipe.read().decode("utf-8").split("\n")
-    return ifaces
+    return [i for i in ifaces if len(i) > 0]
+
+def destroy_ifaces(ifaces):
+    for iface in ifaces:
+        pipe = Popen(f"ifconfig {iface} destroy", shell=True, stdout=PIPE, stderr=PIPE).stdout
+        result = pipe.read().decode("utf-8")
+        print(result)
 
 def status_transmission():
     """Return True if running, False if not."""
@@ -171,6 +177,7 @@ def test():
     global args
     args = parse_options()
     ifaces = get_tun_ifaces()
+    destroy_ifaces(ifaces)
     print("Done")
 
 if __name__ == "__main__":
