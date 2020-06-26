@@ -183,8 +183,8 @@ def test():
     global args
     args = parse_options()
     ifaces = get_tun_ifaces()
+    ifaces = ['tun1', 'tun22']
     destroy_ifaces(ifaces)
-    print("Done")
 
 if __name__ == "__main__":
     global args
