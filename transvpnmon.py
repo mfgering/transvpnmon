@@ -185,6 +185,7 @@ def test():
     ifaces = get_tun_ifaces()
     ifaces = ['tun1', 'tun22']
     destroy_ifaces(ifaces)
+    run()
 
 if __name__ == "__main__":
     global args
