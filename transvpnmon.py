@@ -19,7 +19,13 @@ def get_tun_ip():
     x = pipe.read().decode("utf-8")
     if len(x) == 0:
         return None
-    return x.split("inet ")[1].split(" ")[0]
+    x2 = x.split("inet ")
+    if len(x2) < 2:
+        return None
+    x3 = x2[1].split(" ")
+    if len(x3) < 1:
+        return None
+    return x3[0]
 
 def get_tun_ifaces():
     global args
@@ -36,9 +42,9 @@ def destroy_ifaces(ifaces):
         result = pipe.read().decode("utf-8")
         if args.verbose:
             if len(result) == 0:
-                print(f"{iface} destroyed\n")
+                print(f"{iface} destroyed")
             else:
-                print(f"{iface} ERROR: {result}\n")
+                print(f"{iface} ERROR: {result}")
 
 def status_transmission():
     """Return True if running, False if not."""

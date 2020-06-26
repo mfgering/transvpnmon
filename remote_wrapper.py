@@ -5,11 +5,11 @@ import transvpnmon
 ptvsd.enable_attach(address = ('0.0.0.0', 8567))
  
 # Enable the line of source code below only if you want the application to wait until the debugger has attached to it
-print("Waiting for attach\n")
+print("Waiting for attach")
 ptvsd.wait_for_attach()
  
 #ptvsd.break_into_debugger()
  
-print("Starting remote test\n")
+print("Starting remote test")
 transvpnmon.test()
 print("Done")
