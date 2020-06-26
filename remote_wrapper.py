@@ -15,4 +15,4 @@ ptvsd.wait_for_attach()
 #print("Hello world you are here %s" % cwd )
 #print("On machine %s" % socket.gethostname())
 
-transvpnmon.run()
+transvpnmon.test()
