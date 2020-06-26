@@ -24,10 +24,8 @@ def get_tun_ip():
 def get_tun_ifaces():
     global args
 
-    ifaces = []
     pipe = Popen("ifconfig -g tun", shell=True, stdout=PIPE, stderr=PIPE).stdout
-    x = pipe.read().decode("utf-8")
-    #TODO: FIX THIS
+    ifaces = pipe.read().decode("utf-8").split("\n")
     return ifaces
 
 def status_transmission():
@@ -169,8 +167,13 @@ def parse_options():
     parser.add_argument('--interval', default=30, type=int)
     return parser.parse_args()
 
-if __name__ == "__main__":
+def test():
     global args
     args = parse_options()
     ifaces = get_tun_ifaces()
+    print("Done")
+
+if __name__ == "__main__":
+    global args
+    args = parse_options()
     run()
