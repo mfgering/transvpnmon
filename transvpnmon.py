@@ -4,6 +4,8 @@ import argparse
 import re
 import time
 
+import settings
+
 #TODO: Check for multiple tun devices
 #TODO: Add email option for problems/status
 #TODO: Logging?
@@ -53,13 +55,13 @@ def status_transmission():
     if args.mock:
         return True 
     p = Popen("service transmission status", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return True if p.returncode == 0 else False
 
 def status_3proxy():
     """Return True if running, False if not."""
     p = Popen("service 3proxy status", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return True if p.returncode == 0 else False
 
 def start_3proxy():
@@ -68,7 +70,7 @@ def start_3proxy():
     if args.verbose:
         print("Starting 3proxy")
     p = Popen("service 3proxy start", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return p.returncode
 
 def stop_3proxy():
@@ -77,7 +79,7 @@ def stop_3proxy():
     if args.verbose:
         print("Stopping 3proxy")
     p = Popen("service 3proxy stop", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return p.returncode
 
 def start_transmission():
@@ -86,7 +88,7 @@ def start_transmission():
     if args.verbose:
         print("Starting transmission")
     p = Popen("service transmission start", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return p.returncode
 
 def stop_transmission():
@@ -95,22 +97,24 @@ def stop_transmission():
     if args.verbose:
         print("Stopping transmission")
     p = Popen("service transmission stop", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return p.returncode
 
 def status_openvpn():
     """Return True if running, False if not."""
     p = Popen("service openvpn status", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return True if p.returncode == 0 else False
 
 def start_openvpn():
+    #NOTE: command is:
+    # /usr/local/sbin/openvpn --script-security 2 --cd /usr/local/etc/openvpn --daemon openvpn --config /openvpn/default.ovpn --writepid /var/run/openvpn.pid
     global args
 
     if args.verbose:
         print("Starting openvpn")
     p = Popen("service openvpn start", shell=True, stdout=PIPE, stderr=PIPE)
-    (so, se) = p.communicate()
+    (_, _) = p.communicate()
     return p.returncode
 
 def update_transmission_bind_addr(addr, settings_file='/transmission/config/settings.json', try_stop_transmission=True):
@@ -157,10 +161,32 @@ def update_3proxy_bind_addr(addr, cfg_file='/usr/local/etc/3proxy.cfg', try_stop
                 print("Updated 3proxy settings for %s" % addr)
     return result
 
+def check_tun_devs():
+    global args
+
+    ifaces = get_tun_ifaces()
+    if len(ifaces) > 1:
+        # Big problem! There should be only zero or one tun device
+        notify_tun_problem(ifaces)
+        fix_tun_problem(ifaces)
+
+def notify_tun_problem(ifaces):
+    global args
+
+    if args.verbose:
+        print(f"ERROR: There are too many ({len(ifaces)}) tun interfaces.")
+    #TODO: Send email
+
+def fix_tun_problem(ifaces):
+    global args
+
+    pass
+
 def run():
     global args
 
     while True:
+        check_tun_devs()
         tun_ip = get_tun_ip()
         if tun_ip is None:
             if status_transmission():
@@ -183,6 +209,8 @@ def parse_options():
     parser.add_argument('--mock', default=False, action='store_true')
     parser.add_argument('--email')
     parser.add_argument('--interval', default=30, type=int)
+    parser.add_argument('--settings')
+    #TODO: Read local settings file
     return parser.parse_args()
 
 def test():
