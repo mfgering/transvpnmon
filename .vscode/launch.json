@@ -8,7 +8,7 @@
       "name": "Python: Attach",
       "type": "python",
       "request": "attach",
-      "port": 5678,
+      "port": 8567,
       "host": "127.0.0.1",
       "pathMappings": [
         {
@@ -29,7 +29,7 @@
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",
-          "remoteRoot": "/root/transvpnmon"
+          "remoteRoot": "."
         }
       ]
     }
