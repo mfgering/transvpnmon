@@ -46,14 +46,18 @@ def get_tun_ifaces():
 def destroy_ifaces(ifaces):
     global args
 
+    num_destroyed = 0
     for iface in ifaces:
         pipe = Popen(f"ifconfig {iface} destroy", shell=True, stdout=PIPE, stderr=PIPE).stdout
         result = pipe.read().decode("utf-8")
+        if len(result) == 0:
+            num_destroyed = num_destroyed + 1 
         if args.verbose:
             if len(result) == 0:
                 print(f"{iface} destroyed")
             else:
                 print(f"{iface} ERROR: {result}")
+        return num_destroyed
 
 def status_transmission():
     """Return True if running, False if not."""
@@ -214,7 +218,10 @@ def send_email(message):
 def fix_tun_problem(ifaces):
     global args
     result = True
-    #TODO: Fix/delete the problem, set result False if problem
+    to_destroy = [ iface for iface in ifaces if iface != 'tun0']
+    destroyed = destroy_ifaces(to_destroy)
+    if len(to_destroy) != destroyed:
+        result = False
     return result
 
 def run():
