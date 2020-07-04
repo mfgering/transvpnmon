@@ -2,7 +2,13 @@
 
 import argparse
 import re
+import smtplib
 import time
+import email
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.parser import HeaderParser
 
 import settings
 
@@ -32,9 +38,10 @@ def get_tun_ip():
 def get_tun_ifaces():
     global args
 
-    pipe = Popen("ifconfig -g tun", shell=True, stdout=PIPE, stderr=PIPE).stdout
+    pipe = Popen("ifconfig | grep tun", shell=True, stdout=PIPE, stderr=PIPE).stdout
     ifaces = pipe.read().decode("utf-8").split("\n")
-    return [i for i in ifaces if len(i) > 0]
+
+    return [i[0:i.find(':')] for i in ifaces if i.find(':') >= 0]
 
 def destroy_ifaces(ifaces):
     global args
@@ -167,20 +174,48 @@ def check_tun_devs():
     ifaces = get_tun_ifaces()
     if len(ifaces) > 1:
         # Big problem! There should be only zero or one tun device
-        notify_tun_problem(ifaces)
-        fix_tun_problem(ifaces)
+        fix_result = fix_tun_problem(ifaces)
+        notify_tun_problem(ifaces, fix_result)
 
-def notify_tun_problem(ifaces):
-    global args
-
+def notify_tun_problem(ifaces, fix_result):
+    global args, config
     if args.verbose:
         print(f"ERROR: There are too many ({len(ifaces)}) tun interfaces.")
-    #TODO: Send email
+    message = MIMEMultipart()
+    message['Subject'] = 'Transmission jail interface problem.'
+    msg_content = f"ERROR: There are too many ({len(ifaces)}) tun interfaces."
+    if fix_result:
+        msg_content += "\nThe fix worked.\n"
+    else:
+        msg_content += "\nThe fix FAILED.\n"
+    message.attach(MIMEText(msg_content, 'text/plain'))
+    send_email(message)
+    
+def send_email(message):
+    global args, config
+
+    email_acct = settings.EMAIL_ACCOUNTS[config['email_account']]
+    message['From'] = email_acct['from_address']
+    message['To'] = config['to_addr']
+    try:
+        conn = smtplib.SMTP(email_acct['smtp_server'])
+        conn.set_debuglevel(False)
+        conn.login(email_acct['smtp_user_name'], email_acct['smtp_password'])
+        try:
+            conn.send_message(message)
+        finally:
+            conn.quit()
+    except Exception as exc:
+        print("ERROR sending message (Subject: %s): %s" % (message['Subject'], str(exc)))
+        return False
+    if args.verbose:
+        print("Sent message: %s" % message['Subject'])
 
 def fix_tun_problem(ifaces):
     global args
-
-    pass
+    result = True
+    #TODO: Fix/delete the problem, set result False if problem
+    return result
 
 def run():
     global args
@@ -207,23 +242,27 @@ def parse_options():
     parser.add_argument('--debug', default=False, action='store_true')
     parser.add_argument('--verbose', default=False, action='store_true')
     parser.add_argument('--mock', default=False, action='store_true')
-    parser.add_argument('--email')
+    parser.add_argument('--config', default='default')
     parser.add_argument('--interval', default=30, type=int)
     parser.add_argument('--settings')
     #TODO: Read local settings file
     return parser.parse_args()
 
 def test():
-    global args
-    args = parse_options()
-    ifaces = get_tun_ifaces()
+    global args, config
+    #args = parse_options()
+    notify_tun_problem(['tun42'], False)
+    return
+    #ifaces = get_tun_ifaces()
     #ifaces = ['tun1', 'tun22']
-    destroy_ifaces(ifaces)
-    run()
+    #destroy_ifaces(ifaces)
+    #run()
 
 if __name__ == "__main__":
-    global args
+    global args, config
     args = parse_options()
+    config_name = args.config
+    config = settings.CONFIG[config_name]
     if args.mock:
         test()
     else:
