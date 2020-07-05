@@ -8,17 +8,17 @@
 . /etc/rc.subr
 
 name=transvpnmon
-load_rc_config $name
+start_cmd="${name}_start"
 
-#start_cmd="${name}_start"
+rcvar=`set_rcvar`
 
-rcvar="${name}_enable"
+command="/root/transvpnmon/transvpnmon.py"
+command_interpreter=/usr/local/bin/python3
+
 pidfile="/var/run/${name}.pid"
 
-command="/usr/sbin/daemon"
-command_args="-c -f -P ${pidfile} /root/transvpnmon/transvpnmon.py"
-#command="/usr/sbin/transvpnmon.py"
-#command_interpreter=/usr/local/bin/python3
-#start_cmd="/usr/sbin/daemon -p $pidfile $command"
+start_cmd="/usr/sbin/daemon -p $pidfile $command"
+
+load_rc_config $name
 
 run_rc_command "$1"
