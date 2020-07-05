@@ -3,21 +3,22 @@
 # PROVIDE: transvpnmon
 # REQUIRE: transmission
 # REQUIRE: openvpn
+# REQUIRE: 3proxy
 
 . /etc/rc.subr
 
 name=transvpnmon
-start_cmd="${name}_start"
+load_rc_config $name
 
-rcvar=`set_rcvar`
+#start_cmd="${name}_start"
 
-command="/usr/sbin/transvpnmon.py"
-command_interpreter=/usr/local/bin/python3
-
+rcvar="${name}_enable"
 pidfile="/var/run/${name}.pid"
 
-start_cmd="/usr/sbin/daemon -p $pidfile $command"
-
-load_rc_config $name
+command="/usr/sbin/daemon"
+command_args="-c -f -P ${pidfile} /root/transvpnmon/transvpnmon.py"
+#command="/usr/sbin/transvpnmon.py"
+#command_interpreter=/usr/local/bin/python3
+#start_cmd="/usr/sbin/daemon -p $pidfile $command"
 
 run_rc_command "$1"
