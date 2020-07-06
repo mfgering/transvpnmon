@@ -223,6 +223,7 @@ def run():
     global args
 
     while True:
+        logging.info("Checking...")
         check_tun_devs()
         tun_ip = get_tun_ip()
         if tun_ip is None:
@@ -237,6 +238,7 @@ def run():
                 start_transmission()
             if is_updated or not status_3proxy():
                 start_3proxy()
+        logging.info("Finished checking.")
         time.sleep(args.interval)
 
 def parse_options():
@@ -263,10 +265,14 @@ def test():
 
 if __name__ == "__main__":
     global args, config
-    args = parse_options()
-    config_name = args.config
-    config = settings.CONFIG[config_name]
-    if args.mock:
-        test()
-    else:
-        run()
+    logging.info("Starting transvpnmon")
+    try:
+        args = parse_options()
+        config_name = args.config
+        config = settings.CONFIG[config_name]
+        if args.mock:
+            test()
+        else:
+            run()
+    finally:
+    logging.info("Ending transvpnmon")
