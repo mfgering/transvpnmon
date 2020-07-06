@@ -173,12 +173,13 @@ def check_tun_devs():
     ifaces = get_tun_ifaces()
     if len(ifaces) > 1:
         # Big problem! There should be only zero or one tun device
+        logging.error(f"ERROR: There are too many ({len(ifaces)}) tun interfaces: "+
+        ", ".join(ifaces))
         fix_result = fix_tun_problem(ifaces)
         notify_tun_problem(ifaces, fix_result)
 
 def notify_tun_problem(ifaces, fix_result):
     global args, config
-    logging.error(f"ERROR: There are too many ({len(ifaces)}) tun interfaces.")
     message = MIMEMultipart()
     message['Subject'] = 'Transmission jail interface problem.'
     msg_content = f"ERROR: There are too many ({len(ifaces)}) tun interfaces."
