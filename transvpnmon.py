@@ -238,7 +238,7 @@ def run():
                 start_transmission()
             if is_updated or not status_3proxy():
                 start_3proxy()
-        logging.info("Finished checking.")
+        logging.info(f"Finished checking, sleeping for {args.interval} seconds.")
         time.sleep(args.interval)
 
 def parse_options():
