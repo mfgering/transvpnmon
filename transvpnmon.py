@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 
 import argparse
+import logging
 import re
 import smtplib
 import time
@@ -12,12 +13,14 @@ from email.parser import HeaderParser
 
 import settings
 
-#TODO: Check for multiple tun devices
 #TODO: Add email option for problems/status
-#TODO: Logging?
 
 from subprocess import Popen, PIPE
 
+logging.basicConfig(filename=settings.LOG_FILE, filemode='a',
+                    format='[%(asctime)s] %(message)s',
+        			datefmt='%Y/%d/%m %H:%M:%S',
+		        	level=logging.INFO)
 def get_tun_ip():
     global args
 
@@ -52,11 +55,10 @@ def destroy_ifaces(ifaces):
         result = pipe.read().decode("utf-8")
         if len(result) == 0:
             num_destroyed = num_destroyed + 1 
-        if args.verbose:
-            if len(result) == 0:
-                print(f"{iface} destroyed")
-            else:
-                print(f"{iface} ERROR: {result}")
+        if len(result) == 0:
+            logging.warning(f"{iface} destroyed")
+        else:
+            logging.error(f"{iface} ERROR: {result}")
         return num_destroyed
 
 def status_transmission():
@@ -78,8 +80,7 @@ def status_3proxy():
 def start_3proxy():
     global args
 
-    if args.verbose:
-        print("Starting 3proxy")
+    logging.info("Starting 3proxy")
     p = Popen("service 3proxy start", shell=True, stdout=PIPE, stderr=PIPE)
     (_, _) = p.communicate()
     return p.returncode
@@ -87,8 +88,7 @@ def start_3proxy():
 def stop_3proxy():
     global args
 
-    if args.verbose:
-        print("Stopping 3proxy")
+    logging.info("Stopping 3proxy")
     p = Popen("service 3proxy stop", shell=True, stdout=PIPE, stderr=PIPE)
     (_, _) = p.communicate()
     return p.returncode
@@ -96,8 +96,7 @@ def stop_3proxy():
 def start_transmission():
     global args
 
-    if args.verbose:
-        print("Starting transmission")
+    logging.info("Starting transmission")
     p = Popen("service transmission start", shell=True, stdout=PIPE, stderr=PIPE)
     (_, _) = p.communicate()
     return p.returncode
@@ -105,8 +104,7 @@ def start_transmission():
 def stop_transmission():
     global args
 
-    if args.verbose:
-        print("Stopping transmission")
+    logging.info("Stopping transmission")
     p = Popen("service transmission stop", shell=True, stdout=PIPE, stderr=PIPE)
     (_, _) = p.communicate()
     return p.returncode
@@ -122,8 +120,7 @@ def start_openvpn():
     # /usr/local/sbin/openvpn --script-security 2 --cd /usr/local/etc/openvpn --daemon openvpn --config /openvpn/default.ovpn --writepid /var/run/openvpn.pid
     global args
 
-    if args.verbose:
-        print("Starting openvpn")
+    logging.info("Starting openvpn")
     p = Popen("service openvpn start", shell=True, stdout=PIPE, stderr=PIPE)
     (_, _) = p.communicate()
     return p.returncode
@@ -146,8 +143,7 @@ def update_transmission_bind_addr(addr, settings_file='/transmission/config/sett
         with open(settings_file, 'w') as f:
             f.write(updated_contents)
             result = True
-            if args.verbose:
-                print("Updated transmission settings for %s" % addr)
+            logging.warn("Updated transmission settings for %s" % addr)
     return result
 
 def update_3proxy_bind_addr(addr, cfg_file='/usr/local/etc/3proxy.cfg', try_stop_3proxy=True):
@@ -168,8 +164,7 @@ def update_3proxy_bind_addr(addr, cfg_file='/usr/local/etc/3proxy.cfg', try_stop
         with open(cfg_file, 'w') as f:
             f.write(updated_contents)
             result = True
-            if args.verbose:
-                print("Updated 3proxy settings for %s" % addr)
+            logging.warn("Updated 3proxy settings for %s" % addr)
     return result
 
 def check_tun_devs():
@@ -183,8 +178,7 @@ def check_tun_devs():
 
 def notify_tun_problem(ifaces, fix_result):
     global args, config
-    if args.verbose:
-        print(f"ERROR: There are too many ({len(ifaces)}) tun interfaces.")
+    logging.error(f"ERROR: There are too many ({len(ifaces)}) tun interfaces.")
     message = MIMEMultipart()
     message['Subject'] = 'Transmission jail interface problem.'
     msg_content = f"ERROR: There are too many ({len(ifaces)}) tun interfaces."
@@ -210,10 +204,9 @@ def send_email(message):
         finally:
             conn.quit()
     except Exception as exc:
-        print("ERROR sending message (Subject: %s): %s" % (message['Subject'], str(exc)))
+        logging.error("ERROR sending message (Subject: %s): %s" % (message['Subject'], str(exc)))
         return False
-    if args.verbose:
-        print("Sent message: %s" % message['Subject'])
+    logging.info("Sent message: %s" % message['Subject'])
 
 def fix_tun_problem(ifaces):
     global args
@@ -252,13 +245,14 @@ def parse_options():
     parser.add_argument('--config', default='default')
     parser.add_argument('--interval', default=30, type=int)
     parser.add_argument('--settings')
-    #TODO: Read local settings file
     return parser.parse_args()
 
 def test():
+    logging.info("Testing started")
     global args, config
     #args = parse_options()
     notify_tun_problem(['tun42'], False)
+    logging.info("Testing ended")
     return
     #ifaces = get_tun_ifaces()
     #ifaces = ['tun1', 'tun22']
