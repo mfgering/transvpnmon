@@ -42,9 +42,10 @@ def get_tun_ifaces():
     global args
 
     pipe = Popen("ifconfig | grep tun", shell=True, stdout=PIPE, stderr=PIPE).stdout
-    ifaces = pipe.read().decode("utf-8").split("\n")
+    ifaces = pipe.read().decode("utf-8")
 
-    return [i[0:i.find(':')] for i in ifaces if i.find(':') >= 0]
+    arr = [t[1] for t in re.finditer(r'(tun\d+):', ifaces)]
+    return arr
 
 def destroy_ifaces(ifaces):
     global args
@@ -174,7 +175,7 @@ def check_tun_devs():
     if len(ifaces) > 1:
         # Big problem! There should be only zero or one tun device
         logging.error(f"ERROR: There are too many ({len(ifaces)}) tun interfaces: "+
-        ", ".join(ifaces))
+            ", ".join(ifaces))
         fix_result = fix_tun_problem(ifaces)
         notify_tun_problem(ifaces, fix_result)
 
