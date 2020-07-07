@@ -246,7 +246,7 @@ def parse_options():
     parser.add_argument('--verbose', default=False, action='store_true')
     parser.add_argument('--mock', default=False, action='store_true')
     parser.add_argument('--config', default='default')
-    parser.add_argument('--interval', default=30, type=int)
+    parser.add_argument('--interval', default=120, type=int)
     parser.add_argument('--settings')
     return parser.parse_args()
 
