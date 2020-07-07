@@ -1,5 +1,4 @@
 #!/usr/local/bin/python3
-
 import argparse
 import logging
 import re
@@ -198,7 +197,7 @@ def send_email(message):
     message['From'] = email_acct['from_address']
     message['To'] = config['to_addr']
     try:
-        conn = smtplib.SMTP(email_acct['smtp_server'])
+        conn = smtplib.SMTP_SSL(email_acct['smtp_server'])
         conn.set_debuglevel(False)
         conn.login(email_acct['smtp_user_name'], email_acct['smtp_password'])
         try:
