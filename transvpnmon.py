@@ -12,8 +12,6 @@ from email.parser import HeaderParser
 
 import settings
 
-#TODO: Add email option for problems/status
-
 from subprocess import Popen, PIPE
 
 logging.basicConfig(filename=settings.LOG_FILE, filemode='a',
