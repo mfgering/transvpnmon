@@ -17,8 +17,23 @@ from subprocess import Popen, PIPE
 
 logging.basicConfig(filename=settings.LOG_FILE, filemode='a',
                     format='[%(asctime)s] %(message)s',
-        			datefmt='%Y/%d/%m %H:%M:%S',
-		        	level=logging.INFO)
+                    datefmt='%Y/%d/%m %H:%M:%S',
+                    level=logging.INFO)
+
+def service_action(service_name, action, timeout=10):
+    out_str = ""
+    err_str = ""
+    rc = 1
+    cmd = ["service", service_name, action]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        out_str, err_str = p.communicate(timeout=8)
+        rc = p.returncode
+    except subprocess.TimeoutExpired:
+        pass
+    logging.debug(f"Service {service_name} {service_action} rc: {rc} out: '{out_str}' err: '{err_str}")
+    return rc, out_str, err_str
+
 def get_tun_ip():
     global args
 
@@ -72,27 +87,22 @@ def status_transmission():
 
 def status_3proxy():
     """Return True if running, False if not."""
-    p = Popen(["/usr/sbin/service", "3proxy", "status"], shell=False, stdout=PIPE, stderr=PIPE)
-    (_, _) = p.communicate()
-    return True if p.returncode == 0 else False
+    (rc, _, _) = service_action("3proxy", "status")
+    return True if rc == 0 else False
 
 def start_3proxy():
     global args
 
     logging.info("Starting 3proxy")
-    p = Popen(["/usr/sbin/service", "3proxy", "start"], shell=False)
-    logging.info("About to communicate with 3proxy start")
-    (_, _) = p.communicate()
-    logging.info(f"Tried starting 3proxy, rc={p.returncode}")
-    return p.returncode
+    (rc, _, _) = service_action("3proxy", "start")
+    return True if rc == 0 else False
 
 def stop_3proxy():
     global args
 
     logging.info("Stopping 3proxy")
-    p = Popen("service 3proxy stop", shell=True, stdout=PIPE, stderr=PIPE)
-    (_, _) = p.communicate()
-    return p.returncode
+    (rc, _, _) = service_action("3proxy", "stop")
+    return True if rc == 0 else False
 
 def start_transmission():
     global args
