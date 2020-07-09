@@ -1,5 +1,7 @@
 import logging
 
+CHECK_INTERVAL_SECS = 120
+
 EMAIL_ACCOUNTS = {}
 
 CONFIG = {}

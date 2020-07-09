@@ -3,6 +3,7 @@ import argparse
 import logging
 import re
 import smtplib
+import subprocess
 import time
 import email
 from email.mime.text import MIMEText
@@ -71,7 +72,7 @@ def status_transmission():
 
 def status_3proxy():
     """Return True if running, False if not."""
-    p = Popen("service 3proxy status", shell=True, stdout=PIPE, stderr=PIPE)
+    p = Popen(["/usr/sbin/service", "3proxy", "status"], shell=False, stdout=PIPE, stderr=PIPE)
     (_, _) = p.communicate()
     return True if p.returncode == 0 else False
 
@@ -79,8 +80,10 @@ def start_3proxy():
     global args
 
     logging.info("Starting 3proxy")
-    p = Popen("service 3proxy start", shell=True, stdout=PIPE, stderr=PIPE)
+    p = Popen(["/usr/sbin/service", "3proxy", "start"], shell=False)
+    logging.info("About to communicate with 3proxy start")
     (_, _) = p.communicate()
+    logging.info(f"Tried starting 3proxy, rc={p.returncode}")
     return p.returncode
 
 def stop_3proxy():
@@ -235,8 +238,8 @@ def run():
                 start_transmission()
             if is_updated or not status_3proxy():
                 start_3proxy()
-        logging.info(f"Finished checking, sleeping for {args.interval} seconds.")
-        time.sleep(args.interval)
+        logging.info(f"Finished checking, sleeping for {settings.CHECK_INTERVAL_SECS} seconds.")
+        time.sleep(settings.CHECK_INTERVAL_SECS)
 
 def parse_options():
     parser = argparse.ArgumentParser(description="Monitor important processes")
@@ -244,7 +247,6 @@ def parse_options():
     parser.add_argument('--verbose', default=False, action='store_true')
     parser.add_argument('--mock', default=False, action='store_true')
     parser.add_argument('--config', default='default')
-    parser.add_argument('--interval', default=120, type=int)
     parser.add_argument('--settings')
     return parser.parse_args()
 
