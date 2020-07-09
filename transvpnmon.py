@@ -37,7 +37,7 @@ def service_action(service_name, action, timeout=10):
 def get_tun_ip():
     global args
 
-    if args.mock:
+    if args.test:
         return None
     pipe = Popen("ifconfig tun0", shell=True, stdout=PIPE, stderr=PIPE).stdout
     x = pipe.read().decode("utf-8")
@@ -79,7 +79,7 @@ def status_transmission():
     """Return True if running, False if not."""
     global args
 
-    if args.mock:
+    if args.test:
         return True 
     p = Popen("service transmission status", shell=True, stdout=PIPE, stderr=PIPE)
     (_, _) = p.communicate()
@@ -255,15 +255,17 @@ def parse_options():
     parser = argparse.ArgumentParser(description="Monitor important processes")
     parser.add_argument('--debug', default=False, action='store_true')
     parser.add_argument('--verbose', default=False, action='store_true')
-    parser.add_argument('--mock', default=False, action='store_true')
+    parser.add_argument('--test', default=False, action='store_true')
     parser.add_argument('--config', default='default')
     parser.add_argument('--settings')
     return parser.parse_args()
 
 def test():
+    logging.getLogger().setLevel(logging.DEBUG)
     logging.info("Testing started")
     global args, config
-    #args = parse_options()
+    (rc, out, err) = service_action("3proxy", "status")
+
     notify_tun_problem(['tun42'], False)
     logging.info("Testing ended")
     return
@@ -279,7 +281,7 @@ if __name__ == "__main__":
         args = parse_options()
         config_name = args.config
         config = settings.CONFIG[config_name]
-        if args.mock:
+        if args.test:
             test()
         else:
             run()
