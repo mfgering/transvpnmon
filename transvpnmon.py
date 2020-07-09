@@ -30,8 +30,8 @@ def service_action(service_name, action, timeout=10):
         out_str, err_str = p.communicate(timeout=8)
         rc = p.returncode
     except subprocess.TimeoutExpired:
-        pass
-    logging.debug(f"Service {service_name} {service_action} rc: {rc} out: '{out_str}' err: '{err_str}")
+        rc = 0
+    logging.debug(f"Service {service_name} {action} rc: {rc} out: '{out_str}' err: '{err_str}'")
     return rc, out_str, err_str
 
 def get_tun_ip():
@@ -75,66 +75,44 @@ def destroy_ifaces(ifaces):
             logging.error(f"{iface} ERROR: {result}")
         return num_destroyed
 
-def status_transmission():
-    """Return True if running, False if not."""
-    global args
-
-    if args.test:
-        return True 
-    p = Popen("service transmission status", shell=True, stdout=PIPE, stderr=PIPE)
-    (_, _) = p.communicate()
-    return True if p.returncode == 0 else False
-
 def status_3proxy():
     """Return True if running, False if not."""
     (rc, _, _) = service_action("3proxy", "status")
     return True if rc == 0 else False
 
 def start_3proxy():
-    global args
-
     logging.info("Starting 3proxy")
     (rc, _, _) = service_action("3proxy", "start")
     return True if rc == 0 else False
 
 def stop_3proxy():
-    global args
-
     logging.info("Stopping 3proxy")
     (rc, _, _) = service_action("3proxy", "stop")
     return True if rc == 0 else False
 
-def start_transmission():
-    global args
+def status_transmission():
+    """Return True if running, False if not."""
+    (rc, _, _) = service_action("transmission", "status")
+    return True if rc == 0 else False
 
+def start_transmission():
     logging.info("Starting transmission")
-    p = Popen("service transmission start", shell=True, stdout=PIPE, stderr=PIPE)
-    (_, _) = p.communicate()
-    return p.returncode
+    (rc, _, _) = service_action("transmission", "start")
+    return True if rc == 0 else False
 
 def stop_transmission():
-    global args
-
     logging.info("Stopping transmission")
-    p = Popen("service transmission stop", shell=True, stdout=PIPE, stderr=PIPE)
-    (_, _) = p.communicate()
-    return p.returncode
+    (rc, _, _) = service_action("transmission", "stop")
+    return True if rc == 0 else False
 
 def status_openvpn():
     """Return True if running, False if not."""
-    p = Popen("service openvpn status", shell=True, stdout=PIPE, stderr=PIPE)
-    (_, _) = p.communicate()
-    return True if p.returncode == 0 else False
+    (rc, _, _) = service_action("openvpn", "status")
+    return True if rc == 0 else False
 
 def start_openvpn():
-    #NOTE: command is:
-    # /usr/local/sbin/openvpn --script-security 2 --cd /usr/local/etc/openvpn --daemon openvpn --config /openvpn/default.ovpn --writepid /var/run/openvpn.pid
-    global args
-
-    logging.info("Starting openvpn")
-    p = Popen("service openvpn start", shell=True, stdout=PIPE, stderr=PIPE)
-    (_, _) = p.communicate()
-    return p.returncode
+    (rc, _, _) = service_action("openvpn", "status")
+    return True if rc == 0 else False
 
 def update_transmission_bind_addr(addr, settings_file='/transmission/config/settings.json', try_stop_transmission=True):
     """Update the transmission settings and return True if changed."""
@@ -265,14 +243,12 @@ def test():
     logging.info("Testing started")
     global args, config
     (rc, out, err) = service_action("3proxy", "status")
-
-    notify_tun_problem(['tun42'], False)
+    (rc, out, err) = service_action("3proxy", "stop")
+    (rc, out, err) = service_action("3proxy", "stop")
+    (rc, out, err) = service_action("3proxy", "start")
+    (rc, out, err) = service_action("3proxy", "start")
+    (rc, out, err) = service_action("3proxy", "stop")
     logging.info("Testing ended")
-    return
-    #ifaces = get_tun_ifaces()
-    #ifaces = ['tun1', 'tun22']
-    #destroy_ifaces(ifaces)
-    #run()
 
 if __name__ == "__main__":
     global args, config
