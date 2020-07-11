@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 import subprocess
 import pprint
+import logging
 
 def service_action(service_name, action, timeout=10):
 	out_str = ""
@@ -40,6 +41,29 @@ def get_tun_ip():
 		return None
 	return x3[0]
 
+def destroy_ifaces(ifaces):
+	num_destroyed = 0
+	for iface in ifaces:
+		out_str = ""
+		err_str = ""
+		rc = 1
+		cmd = ["ifconfig", iface, "destroy"]
+		cmd_str = " ".join(cmd)
+		p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+		try:
+			out_str, err_str = p.communicate(timeout=8)
+			rc = p.returncode
+		except subprocess.TimeoutExpired:
+			rc = 0
+		logging.debug(f"cmd: '{cmd_str}' rc: {rc} out: '{out_str}' err: '{err_str}'")
+		if rc == 0:
+			num_destroyed = num_destroyed + 1 
+			logging.warning(f"{iface} destroyed")
+		else:
+			logging.error(f"{iface} ERROR: out: '{out_str}', err: '{err_str}'")
+		return num_destroyed
 
-tun = get_tun_ip()
-print(f"tun: {tun}")
+logging.getLogger().setLevel(logging.DEBUG)
+ifaces = ["tun33", "tun44"]
+num_destroyed = destroy_ifaces(ifaces)
+print(f"Destroyed {num_destroyed}")

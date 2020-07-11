@@ -66,18 +66,25 @@ def get_tun_ifaces():
 	return arr
 
 def destroy_ifaces(ifaces):
-	global args
-
 	num_destroyed = 0
 	for iface in ifaces:
-		pipe = Popen(f"ifconfig {iface} destroy", shell=True, stdout=PIPE, stderr=PIPE).stdout
-		result = pipe.read().decode("utf-8")
-		if len(result) == 0:
+		out_str = ""
+		err_str = ""
+		rc = 1
+		cmd = ["ifconfig", iface, "destroy"]
+		cmd_str = " ".join(cmd)
+		p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+		try:
+			out_str, err_str = p.communicate(timeout=8)
+			rc = p.returncode
+		except subprocess.TimeoutExpired:
+			rc = 0
+		logging.debug(f"cmd: '{cmd_str}' rc: {rc} out: '{out_str}' err: '{err_str}'")
+		if rc == 0:
 			num_destroyed = num_destroyed + 1 
-		if len(result) == 0:
 			logging.warning(f"{iface} destroyed")
 		else:
-			logging.error(f"{iface} ERROR: {result}")
+			logging.error(f"{iface} ERROR: out: '{out_str}', err: '{err_str}'")
 		return num_destroyed
 
 def status_3proxy():
