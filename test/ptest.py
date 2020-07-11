@@ -61,7 +61,7 @@ def destroy_ifaces(ifaces):
 			logging.warning(f"{iface} destroyed")
 		else:
 			logging.error(f"{iface} ERROR: out: '{out_str}', err: '{err_str}'")
-		return num_destroyed
+	return num_destroyed
 
 logging.getLogger().setLevel(logging.DEBUG)
 ifaces = ["tun33", "tun44"]

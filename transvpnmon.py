@@ -85,7 +85,7 @@ def destroy_ifaces(ifaces):
 			logging.warning(f"{iface} destroyed")
 		else:
 			logging.error(f"{iface} ERROR: out: '{out_str}', err: '{err_str}'")
-		return num_destroyed
+	return num_destroyed
 
 def status_3proxy():
 	"""Return True if running, False if not."""
